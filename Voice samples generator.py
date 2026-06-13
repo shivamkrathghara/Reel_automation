@@ -2,9 +2,7 @@ import edge_tts
 import asyncio
 import os
 
-SAVE_FOLDER = r"C:\Users\admin\OneDrive\Desktop\psychology\Voice_Samples"
-
-os.makedirs(SAVE_FOLDER, exist_ok=True)
+BASE_FOLDER = r"C:\Users\admin\OneDrive\Desktop\psychology\Voice_Samples"
 
 TEXT = """
 You have power over your mind.
@@ -22,48 +20,96 @@ They are the most disciplined.
 Built in silence.
 """
 
-voices = [
-    "en-US-BrianMultilingualNeural",
-    "en-US-ChristopherNeural",
-    "en-US-AndrewNeural",
-    "en-US-GuyNeural",
-    "en-US-RogerNeural",
-    "en-US-SteffanNeural",
-    "en-US-EricNeural",
-    "en-GB-RyanNeural",
-    "en-GB-ThomasNeural",
-    "en-AU-WilliamNeural",
-    "en-CA-LiamNeural",
-    "en-IN-PrabhatNeural"
-]
+VOICE_GROUPS = {
+
+    "Male_Stoic": [
+        "en-US-EricNeural",
+        "en-US-AndrewNeural",
+        "en-US-RogerNeural",
+        "en-GB-ThomasNeural",
+    ],
+
+    "Male_Narrator": [
+        "en-US-GuyNeural",
+        "en-US-ChristopherNeural",
+        "en-US-BrianMultilingualNeural",
+        "en-AU-WilliamNeural",
+    ],
+
+    "Male_Young": [
+        "en-US-JasonNeural",
+        "en-CA-LiamNeural",
+        "en-IN-PrabhatNeural",
+    ],
+
+    "Female_Soft": [
+        "en-US-JennyNeural",
+        "en-US-MichelleNeural",
+        "en-US-AnaNeural",
+    ],
+
+    "Female_Psychologist": [
+        "en-US-AriaNeural",
+        "en-US-JennyNeural",
+        "en-GB-SoniaNeural",
+    ],
+
+    "Female_Storytelling": [
+        "en-US-EmmaNeural",
+        "en-AU-NatashaNeural",
+        "en-CA-ClaraNeural",
+    ]
+}
+
+
+async def generate_voice(text, voice, output_file):
+
+    communicate = edge_tts.Communicate(
+        text=text,
+        voice=voice,
+        rate="-10%",
+        pitch="-5Hz"
+    )
+
+    await communicate.save(output_file)
+
 
 async def main():
 
-    for voice in voices:
+    for folder_name, voices in VOICE_GROUPS.items():
 
-        try:
+        folder_path = os.path.join(
+            BASE_FOLDER,
+            folder_name
+        )
 
-            filename = os.path.join(
-                SAVE_FOLDER,
-                f"{voice}.wav"
-            )
+        os.makedirs(folder_path, exist_ok=True)
 
-            communicate = edge_tts.Communicate(
-                text=TEXT,
-                voice=voice,
-                rate="-10%",
-                pitch="-5Hz"
-            )
+        print(f"\nGenerating {folder_name} voices")
 
-            await communicate.save(filename)
+        for voice in voices:
 
-            print(f"✅ Saved: {voice}")
+            try:
 
-        except Exception as e:
+                output_file = os.path.join(
+                    folder_path,
+                    f"{voice}.mp3"
+                )
 
-            print(f"❌ Failed: {voice}")
-            print(e)
+                await generate_voice(
+                    TEXT,
+                    voice,
+                    output_file
+                )
 
-    print("\n🎉 Finished generating all available voices!")
+                print(f"✅ {voice}")
+
+            except Exception as e:
+
+                print(f"❌ {voice}")
+                print(e)
+
+    print("\n🎉 All voice samples generated.")
+
 
 asyncio.run(main())
